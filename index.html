@@ -1,1 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SPC Outlook Viewer</title>
+<style>
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #0d1117;
+  --surface:  #161b22;
+  --border:   #30363d;
+  --accent:   #e94560;
+  --accent2:  #0f3460;
+  --text:     #c9d1d9;
+  --muted:    #8b949e;
+  --radius:   8px;
+}
+body {
+  font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
+/* ── Header ───────────────────────────────────────────────────────────────── */
+header {
+  background: linear-gradient(135deg, #16213e, #0f3460);
+  border-bottom: 2px solid var(--accent);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+header h1 span { color: var(--accent); }
+#last-updated {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+#refresh-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+#refresh-btn:hover { opacity: 0.85; }
+
+/* ── Day selector tabs ────────────────────────────────────────────────────── */
+#day-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.day-tab {
+  flex-shrink: 0;
+  padding: 7px 18px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.day-tab:hover { background: var(--accent2); color: var(--text); }
+.day-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Content area ─────────────────────────────────────────────────────────── */
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 16px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ── View mode toggle ────────────────────────────────────────────────────── */
+#view-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#view-controls span { font-size: 0.82rem; color: var(--muted); }
+.view-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.view-btn {
+  padding: 6px 16px;
+  font-size: 0.82rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+}
+.view-btn.active {
+  background: var(--accent2);
+  color: #fff;
+}
+.view-btn:not(:last-child) { border-right: 1px solid var(--border); }
+
+/* ── Product type selector ────────────────────────────────────────────────── */
+#product-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+#product-selector span { font-size: 0.82rem; color: var(--muted); }
+.prod-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.prod-btn:hover { background: var(--surface); color: var(--text); }
+.prod-btn.active {
+  background: var(--accent2);
+  border-color: #3a7bd5;
+  color: #fff;
+}
+
+/* ── Map / Image panels ───────────────────────────────────────────────────── */
+#panel-interactive, #panel-png {
+  width: 100%;
+}
+#map-frame {
+  width: 100%;
+  height: 600px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #222;
+}
+#png-container {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #111;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  gap: 10px;
+}
+#png-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+}
+#png-missing {
+  padding: 60px 20px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ── Embed section ────────────────────────────────────────────────────────── */
+#embed-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+}
+#embed-section h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+.embed-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.embed-tab {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.embed-tab.active {
+  background: var(--accent2);
+  color: #fff;
+  border-color: #3a7bd5;
+}
+#embed-code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.75rem;
+  background: var(--bg);
+  color: #79c0ff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  white-space: pre-wrap;
+  word-break: break-all;
+  position: relative;
+}
+#copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+#copy-btn:hover { background: var(--accent2); color: #fff; }
+
+/* ── Status bar ───────────────────────────────────────────────────────────── */
+#status {
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 6px 0;
+}
+.status-ok   { color: #56d364; }
+.status-warn { color: #f0a732; }
+.status-err  { color: var(--accent); }
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: 14px;
+  font-size: 0.72rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+footer a { color: #58a6ff; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  #map-frame { height: 420px; }
+  header h1  { font-size: 1.05rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⛈ SPC <span>Outlook</span> Viewer</h1>
+    <div id="last-updated">Loading manifest…</div>
+  </div>
+  <button id="refresh-btn" onclick="loadManifest()">↺ Refresh</button>
+</header>
+
+<div id="day-tabs">
+  <!-- Populated by JS -->
+</div>
+
+<div id="content">
+  <!-- View toggle -->
+  <div id="view-controls">
+    <span>View:</span>
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="interactive" onclick="setView('interactive')">🗺 Interactive Map</button>
+      <button class="view-btn"        data-view="png"         onclick="setView('png')">🖼 Static PNG</button>
+    </div>
+
+    <span style="margin-left:12px">Product:</span>
+    <div id="product-selector">
+      <!-- Populated per day -->
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status">Loading…</div>
+
+  <!-- Interactive panel -->
+  <div id="panel-interactive">
+    <iframe id="map-frame" src="about:blank" allowfullscreen></iframe>
+  </div>
+
+  <!-- PNG panel (hidden by default) -->
+  <div id="panel-png" style="display:none">
+    <div id="png-container">
+      <img id="png-img" src="" alt="SPC Outlook Map"/>
+      <div id="png-missing" style="display:none">PNG not yet generated. Run the workflow to produce it.</div>
+    </div>
+  </div>
+
+  <!-- Embed code section -->
+  <div id="embed-section">
+    <h3>Embed / Use in Your Site</h3>
+    <div class="embed-tabs">
+      <button class="embed-tab active" data-embed="iframe" onclick="setEmbedTab('iframe')">iframe</button>
+      <button class="embed-tab"        data-embed="img"    onclick="setEmbedTab('img')">img tag</button>
+      <button class="embed-tab"        data-embed="json"   onclick="setEmbedTab('json')">GeoJSON URL</button>
+    </div>
+    <div id="embed-code" style="position:relative">
+      <span id="code-text"></span>
+      <button id="copy-btn" onclick="copyEmbed()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Data sourced from the <a href="https://www.spc.noaa.gov/" target="_blank">NOAA Storm Prediction Center</a>.
+  This viewer is not affiliated with NOAA/SPC. ·
+  <a href="https://github.com/gtg0116/spcoutlooks" target="_blank">GitHub</a>
+</footer>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+var REPO_BASE = (function() {
+  var loc = window.location.href;
+  // Works for GitHub Pages and local file serving
+  return loc.replace(/\/[^/]*$/, '');
+})();
+
+var manifest     = null;
+var currentDay   = 1;
+var currentView  = 'interactive';
+var currentProd  = 'categorical';
+var embedTab     = 'iframe';
+
+// ── Manifest ─────────────────────────────────────────────────────────────────
+function loadManifest() {
+  var url = 'output/manifest.json?_=' + Date.now();
+  fetch(url)
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      manifest = data;
+      var ts = data.last_updated_utc || '';
+      document.getElementById('last-updated').textContent =
+        ts ? 'Last updated: ' + ts.slice(0,16).replace('T',' ') + ' UTC' : '';
+      buildDayTabs();
+      selectDay(currentDay);
+      setStatus('Data loaded.', 'ok');
+    })
+    .catch(function(e) {
+      setStatus('Could not load manifest.json – run the GitHub Actions workflow first. (' + e + ')', 'warn');
+      buildFallbackTabs();
+    });
+}
+
+function buildDayTabs() {
+  var tabs = document.getElementById('day-tabs');
+  tabs.innerHTML = '';
+  for (var d = 1; d <= 8; d++) {
+    var btn = document.createElement('button');
+    btn.className = 'day-tab' + (d === currentDay ? ' active' : '');
+    btn.textContent = 'Day ' + d;
+    btn.dataset.day = d;
+    btn.addEventListener('click', (function(day){ return function(){ selectDay(day); }; })(d));
+    tabs.appendChild(btn);
+  }
+}
+
+function buildFallbackTabs() {
+  // Show tabs even without manifest
+  manifest = { days: {} };
+  for (var d = 1; d <= 8; d++) {
+    manifest.days[String(d)] = { available: [], files: {} };
+  }
+  buildDayTabs();
+  selectDay(1);
+}
+
+// ── Day selection ─────────────────────────────────────────────────────────────
+function selectDay(day) {
+  currentDay = day;
+
+  // Update tab styles
+  document.querySelectorAll('.day-tab').forEach(function(b) {
+    b.classList.toggle('active', parseInt(b.dataset.day) === day);
+  });
+
+  var dayData  = (manifest && manifest.days && manifest.days[String(day)]) || {};
+  var avail    = dayData.available || [];
+
+  // Rebuild product selector
+  var ps = document.getElementById('product-selector');
+  ps.innerHTML = '';
+  var products = avail.length ? avail
+    : (day <= 2 ? ['categorical','tornado','wind','hail']
+    : day === 3 ? ['categorical','probabilistic']
+    :             ['probabilistic']);
+
+  // Pick a default product
+  if (!products.includes(currentProd)) currentProd = products[0] || 'categorical';
+
+  products.forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.className = 'prod-btn' + (p === currentProd ? ' active' : '');
+    btn.textContent = labelFor(p);
+    btn.addEventListener('click', (function(prod){ return function(){ selectProduct(prod); }; })(p));
+    ps.appendChild(btn);
+  });
+
+  refreshPanel();
+}
+
+function labelFor(p) {
+  return { categorical: 'Categorical', tornado: 'Tornado', wind: 'Wind',
+           hail: 'Hail', probabilistic: 'Probabilistic' }[p] || p;
+}
+
+function selectProduct(prod) {
+  currentProd = prod;
+  document.querySelectorAll('.prod-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent === labelFor(prod));
+  });
+  refreshPanel();
+}
+
+// ── Panel refresh ─────────────────────────────────────────────────────────────
+function refreshPanel() {
+  var dayData = (manifest && manifest.days && manifest.days[String(currentDay)]) || {};
+  var files   = dayData.files || {};
+  var fileSet = files[currentProd] || {};
+
+  var interactiveSrc = dayData.interactive
+    ? dayData.interactive + '?_=' + Date.now()
+    : null;
+  var pngSrc         = fileSet.png   || null;
+  var geojsonSrc     = fileSet.geojson || null;
+
+  if (currentView === 'interactive') {
+    document.getElementById('map-frame').src = interactiveSrc || 'about:blank';
+    if (!interactiveSrc) setStatus('No interactive map available. Run the workflow.', 'warn');
+    else setStatus('', 'ok');
+  } else {
+    showPng(pngSrc);
+  }
+
+  updateEmbedCode(interactiveSrc, pngSrc, geojsonSrc);
+}
+
+function showPng(src) {
+  var img     = document.getElementById('png-img');
+  var missing = document.getElementById('png-missing');
+  if (src) {
+    img.src = src + '?_=' + Date.now();
+    img.style.display = 'block';
+    missing.style.display = 'none';
+    setStatus('', 'ok');
+  } else {
+    img.style.display = 'none';
+    missing.style.display = 'block';
+    setStatus('PNG not available. Run the GitHub Actions workflow.', 'warn');
+  }
+}
+
+// ── View toggle ───────────────────────────────────────────────────────────────
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.view === view);
+  });
+  document.getElementById('panel-interactive').style.display =
+    view === 'interactive' ? 'block' : 'none';
+  document.getElementById('panel-png').style.display =
+    view === 'png' ? 'block' : 'none';
+  refreshPanel();
+}
+
+// ── Embed code ────────────────────────────────────────────────────────────────
+var cachedUrls = {};
+
+function updateEmbedCode(interactiveSrc, pngSrc, geojsonSrc) {
+  cachedUrls = { interactive: interactiveSrc, png: pngSrc, geojson: geojsonSrc };
+  renderEmbedCode();
+}
+
+function setEmbedTab(tab) {
+  embedTab = tab;
+  document.querySelectorAll('.embed-tab').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.embed === tab);
+  });
+  renderEmbedCode();
+}
+
+function absoluteUrl(rel) {
+  if (!rel) return '';
+  if (rel.startsWith('http')) return rel;
+  return REPO_BASE + '/' + rel;
+}
+
+function renderEmbedCode() {
+  var code = '';
+  var ia  = absoluteUrl(cachedUrls.interactive);
+  var pa  = absoluteUrl(cachedUrls.png);
+  var ga  = absoluteUrl(cachedUrls.geojson);
+
+  if (embedTab === 'iframe') {
+    code = ia
+      ? '<iframe\n  src="' + ia.split('?')[0] + '"\n  width="100%" height="600"\n  frameborder="0"\n  allowfullscreen\n></iframe>'
+      : '<!-- Interactive map not yet generated. Run the workflow. -->';
+  } else if (embedTab === 'img') {
+    code = pa
+      ? '<img\n  src="' + pa.split('?')[0] + '"\n  alt="SPC Day ' + currentDay + ' Outlook"\n  style="max-width:100%;height:auto"\n/>'
+      : '<!-- PNG not yet generated. Run the workflow. -->';
+  } else {
+    code = ga
+      ? '// Fetch and use GeoJSON directly:\nfetch("' + ga.split('?')[0] + '")\n  .then(r => r.json())\n  .then(data => {\n    // data is a GeoJSON FeatureCollection\n    console.log(data.features);\n  });'
+      : '// GeoJSON not yet fetched. Run the workflow.';
+  }
+
+  document.getElementById('code-text').textContent = code;
+}
+
+function copyEmbed() {
+  var text = document.getElementById('code-text').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function(){ btn.textContent = 'Copy'; }, 1800);
+  });
+}
+
+// ── Status ────────────────────────────────────────────────────────────────────
+function setStatus(msg, type) {
+  var el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status-' + (type || 'ok');
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadManifest();
+
+// Auto-refresh every 10 minutes
+setInterval(loadManifest, 10 * 60 * 1000);
+</script>
+</body>
+</html>
