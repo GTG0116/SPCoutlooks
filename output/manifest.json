@@ -1,0 +1,96 @@
+{
+  "last_updated_utc": "2026-03-24T23:28:11.860894+00:00",
+  "days": {
+    "1": {
+      "available": [
+        "categorical",
+        "tornado",
+        "wind",
+        "hail"
+      ],
+      "files": {
+        "categorical": {
+          "geojson": "output/day1/categorical.geojson",
+          "png": "output/day1/categorical.png"
+        },
+        "tornado": {
+          "geojson": "output/day1/tornado.geojson",
+          "png": "output/day1/tornado.png"
+        },
+        "wind": {
+          "geojson": "output/day1/wind.geojson",
+          "png": "output/day1/wind.png"
+        },
+        "hail": {
+          "geojson": "output/day1/hail.geojson",
+          "png": "output/day1/hail.png"
+        }
+      },
+      "interactive": "output/day1/interactive.html"
+    },
+    "2": {
+      "available": [
+        "categorical",
+        "tornado",
+        "wind",
+        "hail"
+      ],
+      "files": {
+        "categorical": {
+          "geojson": "output/day2/categorical.geojson",
+          "png": "output/day2/categorical.png"
+        },
+        "tornado": {
+          "geojson": "output/day2/tornado.geojson",
+          "png": "output/day2/tornado.png"
+        },
+        "wind": {
+          "geojson": "output/day2/wind.geojson",
+          "png": "output/day2/wind.png"
+        },
+        "hail": {
+          "geojson": "output/day2/hail.geojson",
+          "png": "output/day2/hail.png"
+        }
+      },
+      "interactive": "output/day2/interactive.html"
+    },
+    "3": {
+      "available": [
+        "categorical",
+        "probabilistic"
+      ],
+      "files": {
+        "categorical": {
+          "geojson": "output/day3/categorical.geojson",
+          "png": "output/day3/categorical.png"
+        },
+        "probabilistic": {
+          "geojson": "output/day3/probabilistic.geojson",
+          "png": "output/day3/probabilistic.png"
+        }
+      },
+      "interactive": "output/day3/interactive.html"
+    },
+    "4": {
+      "available": [],
+      "files": {}
+    },
+    "5": {
+      "available": [],
+      "files": {}
+    },
+    "6": {
+      "available": [],
+      "files": {}
+    },
+    "7": {
+      "available": [],
+      "files": {}
+    },
+    "8": {
+      "available": [],
+      "files": {}
+    }
+  }
+}
